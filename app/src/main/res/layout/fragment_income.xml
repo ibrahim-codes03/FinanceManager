@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="20dp"
+    tools:context=".fragments.IncomeFragment">
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/incomeAmountLayout"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter Income Amount"
+        app:boxBackgroundMode="outline"
+        app:boxStrokeColor="@color/colorIncome">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/incomeAmount"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="numberDecimal"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="16sp" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/incomeCategoryLayout"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/incomeAmountLayout"
+        android:layout_marginTop="15dp"
+        android:padding="10dp"
+        android:hint="Select Income Category"
+        app:boxBackgroundMode="outline"
+        app:boxStrokeColor="@color/colorIncome"
+        app:endIconMode="dropdown_menu">
+
+        <AutoCompleteTextView
+            android:id="@+id/incomeCategory"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="56dp"
+            android:paddingStart="10dp"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="16sp"
+            android:inputType="none" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnSaveIncome"
+        android:layout_width="220dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/incomeCategoryLayout"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="25dp"
+        android:text="Save Income"
+        android:textStyle="bold"
+        android:textColor="?attr/colorOnPrimary"
+        app:cornerRadius="12dp"
+        app:backgroundTint="@color/colorIncome" />
+
+</RelativeLayout>

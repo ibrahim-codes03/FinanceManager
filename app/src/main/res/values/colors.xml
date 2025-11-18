@@ -21,4 +21,23 @@
     <!-- Transparent or Custom -->
     <color name="transparent">#00000000</color>
 
+    <!-- Primary App Colors -->
+    <color name="colorPrimary">#1976D2</color>        <!-- Blue (buttons, headers) -->
+    <color name="colorPrimaryDark">#1565C0</color>    <!-- Darker Blue (status bar) -->
+    <color name="colorAccent">#4CAF50</color>         <!-- Green (for income / success) -->
+
+    <color name="colorBackground">#F6F7FB</color>     <!-- Light background -->
+    <color name="cardBackground">#FFFFFF</color>      <!-- White cards -->
+
+    <!-- Text Colors -->
+    <color name="textPrimary">#212121</color>         <!-- Main text -->
+    <color name="textSecondary">#757575</color>       <!-- Sub text -->
+
+    <!-- Expense / Income Colors -->
+    <color name="colorExpense">#E53935</color>        <!-- Red (for expenses) -->
+    <color name="colorIncome">#43A047</color>         <!-- Green (for income) -->
+
+    <!-- Others -->
+    <color name="dividerColor">#E0E0E0</color>        <!-- For dividers or lines -->
+    <color name="fabColor">#1976D2</color>            <!-- Floating Action Button -->
 </resources>
