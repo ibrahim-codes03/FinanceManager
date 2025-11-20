@@ -17,6 +17,7 @@ import android.widget.Toast;
 
 import com.example.financemanager.classes.User;
 import com.example.financemanager.R;
+import com.example.financemanager.databinding.ActivitySignUpBinding;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.FirebaseApp;
@@ -27,8 +28,7 @@ import com.google.firebase.database.FirebaseDatabase;
 
 public class SignUpActivity extends AppCompatActivity {
 
-    EditText emailET, passwordET, usernameET;
-    Button signupBtn, loginRedirectBtn;
+    ActivitySignUpBinding binding;
     FirebaseAuth auth;
     FirebaseDatabase database;
     DatabaseReference reference;
@@ -47,17 +47,15 @@ public class SignUpActivity extends AppCompatActivity {
             return insets;
         });
 
+        binding = ActivitySignUpBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+
 
         FirebaseApp.initializeApp(this);
         auth = FirebaseAuth.getInstance();
         database = FirebaseDatabase.getInstance();
         reference = database.getReference("Users");
 
-        usernameET = findViewById(R.id.usernameInput);
-        emailET = findViewById(R.id.emailInput);
-        passwordET = findViewById(R.id.passwordInput);
-        signupBtn = findViewById(R.id.signUpButton);
-        loginRedirectBtn = findViewById(R.id.loginRedirectButton);
 
         user = new User();
 
@@ -66,12 +64,12 @@ public class SignUpActivity extends AppCompatActivity {
         progressDialog.setMessage("Please wait...");
         progressDialog.setCancelable(false);
 
-        signupBtn.setOnClickListener(new View.OnClickListener() {
+        binding.signUpButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String email = emailET.getText().toString();
-                String password = passwordET.getText().toString();
-                String username = usernameET.getText().toString();
+                String email = binding.emailInput.getText().toString();
+                String password = binding.passwordInput.getText().toString();
+                String username = binding.usernameInput.getText().toString();
 
                 if (username.isEmpty() || email.isEmpty() || password.isEmpty()) {
                     Toast.makeText(SignUpActivity.this,
@@ -83,7 +81,7 @@ public class SignUpActivity extends AppCompatActivity {
             }
         });
 
-        loginRedirectBtn.setOnClickListener(new View.OnClickListener() {
+        binding.loginRedirectButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(SignUpActivity.this, LoginActivity.class);
@@ -100,7 +98,7 @@ public class SignUpActivity extends AppCompatActivity {
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
                             id = auth.getCurrentUser().getUid();
-                            user.setUsername(usernameET.getText().toString());
+                            user.setUsername(binding.usernameInput.getText().toString());
                             user.setEmail(email);
                             user.setPassword(password);
 
@@ -123,4 +121,9 @@ public class SignUpActivity extends AppCompatActivity {
                 });
     }
 
+    @Override
+    protected void onDestroy() {
+        binding = null;
+        super.onDestroy();
+    }
 }

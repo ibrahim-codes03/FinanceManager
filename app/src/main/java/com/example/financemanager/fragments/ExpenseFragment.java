@@ -5,18 +5,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.example.financemanager.R;
 import com.example.financemanager.classes.Categories;
 import com.example.financemanager.classes.TransactionData;
-import com.google.android.material.button.MaterialButton;
-import com.google.android.material.textfield.TextInputEditText;
+import com.example.financemanager.databinding.FragmentExpenseBinding;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -27,9 +24,7 @@ import java.util.Locale;
 
 public class ExpenseFragment extends Fragment {
 
-    TextInputEditText expenseAmount;
-    AutoCompleteTextView expenseCategory;
-    MaterialButton btnSaveExpense;
+    FragmentExpenseBinding binding;
     FirebaseAuth auth;
     DatabaseReference transactionRef;
 
@@ -38,19 +33,15 @@ public class ExpenseFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_expense, container, false);
-
-        expenseAmount = view.findViewById(R.id.expenseAmount);
-        expenseCategory = view.findViewById(R.id.expenseCategory);
-        btnSaveExpense = view.findViewById(R.id.btnSaveExpense);
+        binding = FragmentExpenseBinding.inflate(inflater, container, false);
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
                 requireContext(),
                 android.R.layout.simple_dropdown_item_1line,
                 Categories.EXPENSE
         );
-        expenseCategory.setAdapter(adapter);
-        expenseCategory.setOnClickListener(v -> expenseCategory.showDropDown());
+        binding.expenseCategory.setAdapter(adapter);
+        binding.expenseCategory.setOnClickListener(v -> binding.expenseCategory.showDropDown());
 
         auth = FirebaseAuth.getInstance();
         if (auth.getCurrentUser() != null) {
@@ -59,14 +50,14 @@ public class ExpenseFragment extends Fragment {
                     .child(auth.getCurrentUser().getUid());
         }
 
-        btnSaveExpense.setOnClickListener(v -> saveExpense());
+        binding.btnSaveExpense.setOnClickListener(v -> saveExpense());
 
-        return view;
+        return binding.getRoot();
     }
 
     void saveExpense() {
-        String amountText = expenseAmount.getText().toString().trim();
-        String categoryText = expenseCategory.getText().toString().trim();
+        String amountText = binding.expenseAmount.getText().toString().trim();
+        String categoryText = binding.expenseCategory.getText().toString().trim();
 
         if (amountText.isEmpty() || categoryText.isEmpty()) {
             Toast.makeText(getContext(), "Enter amount and select category", Toast.LENGTH_SHORT).show();
@@ -95,12 +86,18 @@ public class ExpenseFragment extends Fragment {
                 transactionRef.child(id).setValue(transaction)
                         .addOnSuccessListener(aVoid -> {
                             Toast.makeText(getContext(), "Expense Added", Toast.LENGTH_SHORT).show();
-                            expenseAmount.setText("");
-                            expenseCategory.setText("");
+                            binding.expenseAmount.setText("");
+                            binding.expenseCategory.setText("");
                         })
                         .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to add expense",
                                 Toast.LENGTH_SHORT).show());
             }
         }
+    }
+
+    @Override
+    public void onDestroyView() {
+        binding = null;
+        super.onDestroyView();
     }
 }

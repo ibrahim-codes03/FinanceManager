@@ -1,24 +1,21 @@
 package com.example.financemanager.fragments;
 
-import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.financemanager.R;
 import com.example.financemanager.classes.CurrencyManager;
 import com.example.financemanager.classes.TransactionData;
 import com.example.financemanager.adapters.TransactionAdapter;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.example.financemanager.databinding.FragmentHomeBinding;
+import com.example.financemanager.activities.TransactionActivity;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -31,15 +28,15 @@ import java.util.List;
 
 public class HomeFragment extends Fragment {
 
-    TextView welcomeText, totalBalanceAmount, incomeAmount, expenseAmount;
-    FloatingActionButton fabMain;
-    RecyclerView recyclerRecentTransactions;
+    FragmentHomeBinding binding;
     TransactionAdapter adapter;
     List<TransactionData> transactionList = new ArrayList<>();
 
     FirebaseAuth auth;
     DatabaseReference transactionRef;
+    DatabaseReference userRef;
     private ValueEventListener transactionListener;
+    private ValueEventListener userListener;
 
     private CurrencyManager currencyManager;
     private String currencySymbol = "$";
@@ -49,71 +46,91 @@ public class HomeFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_home, container, false);
-
-        welcomeText = view.findViewById(R.id.welcomeText);
-        fabMain = view.findViewById(R.id.fab_main);
-        recyclerRecentTransactions = view.findViewById(R.id.recyclerRecentTransactions);
-        totalBalanceAmount = view.findViewById(R.id.totalBalanceAmount);
-        incomeAmount = view.findViewById(R.id.earnedAmount);
-        expenseAmount = view.findViewById(R.id.spentAmount);
+        binding = FragmentHomeBinding.inflate(inflater, container, false);
 
         if (getActivity() != null) currencyManager = new CurrencyManager(getActivity());
         updateCurrencyFromManager();
 
         auth = FirebaseAuth.getInstance();
 
-        fabMain.setOnClickListener(v -> {
+        binding.fabMain.setOnClickListener(v -> {
             if (getActivity() != null)
-                startActivity(new android.content.Intent(getActivity(), com.example.financemanager.activities.TransactionActivity.class));
+                startActivity(new android.content.Intent(getActivity(), TransactionActivity.class));
         });
 
         setupRecyclerView();
-        return view;
+
+        return binding.getRoot();
     }
 
     private void setupRecyclerView() {
-        if (getContext() != null) {
-            recyclerRecentTransactions.setLayoutManager(new LinearLayoutManager(getContext()));
-            adapter = new TransactionAdapter(getContext(), transactionList);
-            recyclerRecentTransactions.setAdapter(adapter);
-        }
+        binding.recyclerRecentTransactions.setLayoutManager(new LinearLayoutManager(getContext()));
+        adapter = new TransactionAdapter(getContext(), transactionList);
+        binding.recyclerRecentTransactions.setAdapter(adapter);
     }
 
     private void attachListener() {
         if (auth == null || auth.getCurrentUser() == null) return;
+
         if (transactionRef == null) {
             transactionRef = FirebaseDatabase.getInstance()
                     .getReference("Transactions")
                     .child(auth.getCurrentUser().getUid());
         }
-        if (transactionListener != null) return;
-        transactionListener = new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (!isAdded() || getView() == null) return;
-                transactionList.clear();
-                for (DataSnapshot data : snapshot.getChildren()) {
-                    TransactionData transaction = data.getValue(TransactionData.class);
-                    if (transaction != null) transactionList.add(transaction);
+        if (transactionListener == null) {
+            transactionListener = new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    if (!isAdded() || getView() == null) return;
+                    transactionList.clear();
+                    for (DataSnapshot data : snapshot.getChildren()) {
+                        TransactionData transaction = data.getValue(TransactionData.class);
+                        if (transaction != null) transactionList.add(transaction);
+                    }
+                    if (adapter != null) adapter.notifyDataSetChanged();
+                    updateTotals();
                 }
-                if (adapter != null) adapter.notifyDataSetChanged();
-                updateTotals();
-            }
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                if (isAdded() && getContext() != null)
-                    Toast.makeText(getContext(), "Failed to load transactions", Toast.LENGTH_SHORT).show();
-            }
-        };
-        transactionRef.addValueEventListener(transactionListener);
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                    if (isAdded())
+                        Toast.makeText(getContext(), "Failed to load transactions", Toast.LENGTH_SHORT).show();
+                }
+            };
+            transactionRef.addValueEventListener(transactionListener);
+        }
+
+        if (userRef == null) {
+            userRef = FirebaseDatabase.getInstance()
+                    .getReference("Users")
+                    .child(auth.getCurrentUser().getUid());
+        }
+        if (userListener == null) {
+            userListener = new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    if (!isAdded()) return;
+                    String username = snapshot.child("username").getValue(String.class);
+                    if (username == null) username = " ";
+                    binding.welcomeText.setText("Hi Welcome, " + username + " 👋");
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                }
+            };
+            userRef.addValueEventListener(userListener);
+        }
     }
 
     private void detachListener() {
         if (transactionRef != null && transactionListener != null) {
             transactionRef.removeEventListener(transactionListener);
             transactionListener = null;
+        }
+        if (userRef != null && userListener != null) {
+            userRef.removeEventListener(userListener);
+            userListener = null;
         }
     }
 
@@ -131,8 +148,6 @@ public class HomeFragment extends Fragment {
     }
 
     private void updateTotals() {
-        if (totalBalanceAmount == null || incomeAmount == null || expenseAmount == null) return;
-
         double income = 0, expense = 0;
         for (TransactionData t : transactionList) {
             if (t != null) {
@@ -144,9 +159,9 @@ public class HomeFragment extends Fragment {
 
         double totalBalance = (income - expense) * currencyRate;
 
-        totalBalanceAmount.setText(currencySymbol + totalBalance);
-        incomeAmount.setText("+" + currencySymbol + income);
-        expenseAmount.setText("-" + currencySymbol + expense);
+        binding.totalBalanceAmount.setText(currencySymbol + totalBalance);
+        binding.earnedAmount.setText("+" + currencySymbol + income);
+        binding.spentAmount.setText("-" + currencySymbol + expense);
     }
 
     private void updateCurrencyFromManager() {
@@ -166,5 +181,11 @@ public class HomeFragment extends Fragment {
     public void refreshTransactions() {
         detachListener();
         attachListener();
+    }
+
+    @Override
+    public void onDestroyView() {
+        binding = null;
+        super.onDestroyView();
     }
 }

@@ -7,6 +7,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -19,6 +20,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.financemanager.R;
+import com.example.financemanager.databinding.ActivityLoginBinding;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.FirebaseApp;
@@ -27,11 +29,10 @@ import com.google.firebase.auth.FirebaseAuth;
 
 public class LoginActivity extends AppCompatActivity {
 
+    ActivityLoginBinding binding;
     FirebaseAuth auth;
-    EditText emailInput, passwordInput;
     Button loginButton, signUpButton;
     CheckBox rememberMeCheckBox;
-    TextView forgotPasswordText;
     SharedPreferences prefs;
     ProgressDialog progressDialog;
 
@@ -39,32 +40,30 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_login);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.loginActivity), (v, insets) -> {
+        binding = ActivityLoginBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.main, (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
 
 
+
+
         FirebaseApp.initializeApp(this);
         auth = FirebaseAuth.getInstance();
         prefs = getSharedPreferences("loginPrefs", MODE_PRIVATE);
 
-        emailInput = findViewById(R.id.emailInput);
-        passwordInput = findViewById(R.id.passwordInput);
-        loginButton = findViewById(R.id.loginButton);
-        signUpButton = findViewById(R.id.signUpButton);
-        rememberMeCheckBox = findViewById(R.id.rememberMeCheck);
-        forgotPasswordText = findViewById(R.id.forgotPasswordText);
 
         progressDialog = new ProgressDialog(this);
         progressDialog.setCancelable(false);
 
         boolean rememberMe = prefs.getBoolean("rememberMe", false);
         if (rememberMe) {
-            emailInput.setText(prefs.getString("email", ""));
-            passwordInput.setText(prefs.getString("password", ""));
+            binding.emailInput.setText(prefs.getString("email", ""));
+            binding.passwordInput.setText(prefs.getString("password", ""));
             rememberMeCheckBox.setChecked(true);
         }
 
@@ -78,8 +77,8 @@ public class LoginActivity extends AppCompatActivity {
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String email = emailInput.getText().toString().trim();
-                String password = passwordInput.getText().toString().trim();
+                String email = binding.emailInput.getText().toString().trim();
+                String password = binding.passwordInput.getText().toString().trim();
 
                 if (email.isEmpty() || password.isEmpty()) {
                     Toast.makeText(LoginActivity.this, "Please fill all fields",
@@ -127,10 +126,10 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
-        forgotPasswordText.setOnClickListener(new View.OnClickListener() {
+        binding.forgotPasswordText.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String email = emailInput.getText().toString().trim();
+                String email = binding.emailInput.getText().toString().trim();
                 if (email.isEmpty()) {
                     Toast.makeText(LoginActivity.this,
                             "Please enter your email first", Toast.LENGTH_SHORT).show();
@@ -157,5 +156,10 @@ public class LoginActivity extends AppCompatActivity {
                         });
             }
         });
+    }
+    @Override
+    protected void onDestroy() {
+        binding = null;
+        super.onDestroy();
     }
 }
